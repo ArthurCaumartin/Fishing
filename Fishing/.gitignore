@@ -1,0 +1,26 @@
+# Unity Stuff
+Library/
+Temp/
+Obj/
+Logs/
+
+Build/
+Builds/
+
+UserSettings/
+
+
+# IDE stuffs
+.vscode/
+.vs/
+.idea/
+
+*.csproj
+*.sln
+*.user
+*.userprefs
+
+
+# OS Stuff
+.DS_Store
+Thumbs.db
