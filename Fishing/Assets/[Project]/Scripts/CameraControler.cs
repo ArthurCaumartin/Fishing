@@ -1,15 +1,15 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class CameraControler : MonoBehaviour
 {
-    [SerializeField] private Transform _playerTransform;
-    [SerializeField] private Transform _hubTransform;
     [SerializeField] private float _trackSpeed = 5;
     private Transform _target;
+    private Camera _camera;
 
-    private void Awake()
+    private void Start()
     {
-        TargetHub();
+        _camera = GetComponent<Camera>();
     }
 
     private void Update()
@@ -29,6 +29,8 @@ public class CameraControler : MonoBehaviour
         _target = target;
     }
 
-    public void TargetPlayer() => _target = _playerTransform;
-    public void TargetHub() => _target = _hubTransform;
+    public void SetSize(float size)
+    {
+        _camera.orthographicSize = size;
+    }
 }
