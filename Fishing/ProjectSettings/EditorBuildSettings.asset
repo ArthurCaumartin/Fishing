@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/[Project]/Scenes/Hub.unity
+    path: Assets/[Project]/Scenes/Game.unity
     guid: 44da4a4e624cde347ba5326a82c5db8a
   - enabled: 1
     path: Assets/[Project]/Scenes/Dive.unity
