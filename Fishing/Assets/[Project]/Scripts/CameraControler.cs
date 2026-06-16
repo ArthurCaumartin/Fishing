@@ -3,6 +3,8 @@ using UnityEngine.Rendering;
 
 public class CameraControler : MonoBehaviour
 {
+    [SerializeField] private Transform _player;
+    [Space]
     [SerializeField] private Transform _target;
     [SerializeField] private float _trackSpeed = 5;
     private Camera _camera;
@@ -10,6 +12,7 @@ public class CameraControler : MonoBehaviour
     private void Start()
     {
         _camera = GetComponent<Camera>();
+        GameEvents.onDiveEnd += () => SetTarget(_player);
     }
 
     private void Update()
@@ -26,6 +29,7 @@ public class CameraControler : MonoBehaviour
 
     public void SetTarget(Transform target)
     {
+        print("Cam Target set to : " + target.name);
         _target = target;
     }
 

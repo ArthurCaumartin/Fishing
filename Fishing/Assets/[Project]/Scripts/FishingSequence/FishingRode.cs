@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Alchemy.Inspector;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 [Serializable]
@@ -37,15 +36,16 @@ public class FishingRode : MonoBehaviour
     [SerializeField] private LayerMask _hookDetectionLayer;
     [Header("Line Path : ")]
     [SerializeField, Range(0.01f, 1)] private float _pathResolution;
+    [Header("Visual : ")]
+    [SerializeField] private LineRenderer _lineRendere;
+
     private Vector3 _pointerPosition;
     private Vector2 _movementDir = Vector2.down;
-
-    public float DistanceTravelTime => _currentTravelDistance / _maxTravelDistance;
     private List<LinePathPoint> _linePathList = new List<LinePathPoint>();
     private Vector2 _lastPathPosRecord;
 
-    [HideInInspector] public UnityEvent OnDropEnd = new UnityEvent();
     public Transform HookTransform => _hookTransorm;
+    public float DistanceTravelTime => _currentTravelDistance / _maxTravelDistance;
 
     public void EnableHookFollow(Vector3 startPointerPos)
     {
@@ -64,25 +64,22 @@ public class FishingRode : MonoBehaviour
             DetectObstacle();
             yield return null;
         }
+        // _lineRendere.enabled = false;
+        RecordPath(isLastPathPoint: true);
 
+        //TODO a bouger dans FishingSequence.cs
         float rewindTime = 1;
         while (rewindTime > 0)
         {
             Vector2 newPops = GetPositionOnPath(rewindTime);
-            Debug.Log("Time : " + rewindTime + " / Pos : " + newPops);
+            // Debug.Log("Time : " + rewindTime + " / Pos : " + newPops);
             transform.position = newPops;
             rewindTime -= Time.deltaTime * 0.2f;
             yield return null;
         }
-    }
 
-    // void Update()
-    // {
-    //     if (_currentTravelDistance >= _maxTravelDistance) return;
-    //     HookDrop();
-    //     RecordPath();
-    //     DetectObstacle();
-    // }
+        GameEvents.onDiveEnd.Invoke();
+    }
 
     private void MoveHook()
     {
@@ -92,8 +89,20 @@ public class FishingRode : MonoBehaviour
         _currentTravelDistance += Time.deltaTime * _movementSpeed;
     }
 
-    private void RecordPath()
+    private void RecordPath(bool isLastPathPoint = false)
     {
+        if (isLastPathPoint)
+        {
+            LinePathPoint newPathPoint = new LinePathPoint(
+                _lastPathPosRecord,
+                _hookTransorm.position,
+                _linePathList[_linePathList.Count - 1].endTime,
+                1
+            );
+            _linePathList.Add(newPathPoint);
+            return;
+        }
+
         float distance = Vector2.Distance(_lastPathPosRecord, _hookTransorm.position);
         if (distance >= _pathResolution)
         {
@@ -118,14 +127,12 @@ public class FishingRode : MonoBehaviour
         if (cols.Length > 0)
         {
             _currentTravelDistance = _maxTravelDistance;
-            OnDropEnd.Invoke();
         }
     }
 
-
     public Vector2 GetPositionOnPath(float time)
     {
-        if (time >= 1) return _linePathList[_linePathList.Count].endPos;
+        if (time >= 1) return _linePathList[_linePathList.Count - 1].endPos;
         if (time <= 0) return _linePathList[0].startPos;
 
         for (int i = 0; i < _linePathList.Count; i++)
@@ -158,6 +165,11 @@ public class FishingRode : MonoBehaviour
             Gizmos.DrawSphere(_linePathList[i].startPos, _pathResolution / 2);
             Gizmos.DrawLine(_linePathList[i].startPos, _linePathList[i].endPos);
         }
-
     }
+}
+
+
+public class FishingRodeVisual : MonoBehaviour
+{
+
 }
