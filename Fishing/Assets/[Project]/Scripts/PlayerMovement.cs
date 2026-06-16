@@ -10,6 +10,10 @@ public class PlayerMovement : MonoBehaviour
     private void Start()
     {
         if(!CanvasManager.Instance) return;
+
+        GameEvents.onDiveStart += () => enabled = false;
+        GameEvents.onDiveEnd += () => enabled = true;
+
         CanvasManager.Instance.SetPanelInputAction(
             () => _velocity.x = -1,
             () => _velocity.x = 0,

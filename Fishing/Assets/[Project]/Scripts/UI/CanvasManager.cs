@@ -24,6 +24,12 @@ public class CanvasManager : MonoBehaviour
             Instance = this;
     }
 
+    private void Start()
+    {
+        GameEvents.onDiveStart +=  () => _buttonInteraction.gameObject.SetActive(false);
+        GameEvents.onDiveEnd +=  () => _buttonInteraction.gameObject.SetActive(true);
+    }
+
     public void SetInteractionButton(Interactible interactible)
     {
         _buttonInteraction.onClick.RemoveAllListeners();
@@ -37,6 +43,12 @@ public class CanvasManager : MonoBehaviour
             _textInteractionButton.text = interactible.interactionText;
             _buttonInteraction.onClick.AddListener(() => { interactible.Interact(); });
         }
+    }
+
+    public void EnableInputPanels(bool isActive)
+    {
+        _panelInputRight.gameObject.SetActive(isActive);
+        _panelInputLeft.gameObject.SetActive(isActive);
     }
 
     public void SetPanelInputAction(Action onDownLeft, Action onUpLeft, Action onDownRight, Action onUpRight)

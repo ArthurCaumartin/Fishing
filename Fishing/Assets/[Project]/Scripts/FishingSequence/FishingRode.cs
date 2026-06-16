@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Alchemy.Inspector;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 [Serializable]
 public struct LinePathPoint
@@ -12,14 +13,16 @@ public struct LinePathPoint
     public Vector2 endPos;
     public float startTime;
     public float endTime;
+    float distance;
 
-    public LinePathPoint(Vector2 startPos, Vector2 endPos, float startTime, float endTime)
+    public LinePathPoint(Vector2 startPos, Vector2 endPos, float startTime, float endTime, float distance)
     {
         this.startPos = startPos;
         this.endPos = endPos;
 
         this.startTime = startTime;
         this.endTime = endTime;
+        this.distance = distance;
     }
 }
 
@@ -43,19 +46,28 @@ public class FishingRode : MonoBehaviour
     private Vector2 _movementDir = Vector2.down;
     private List<LinePathPoint> _linePathList = new List<LinePathPoint>();
     private Vector2 _lastPathPosRecord;
+    private Coroutine _diveCoroutine = null;
 
     public Transform HookTransform => _hookTransorm;
     public float DistanceTravelTime => _currentTravelDistance / _maxTravelDistance;
+    public float MaxTravelDistance => _maxTravelDistance;
 
-    public void EnableHookFollow(Vector3 startPointerPos)
+    private Action _onDiveEnd = null;
+
+    public void StartHookDive(Vector3 startPointerPos, Action onDiveEnd)
     {
+        if (_diveCoroutine != null) return;
         enabled = true;
+        _hookTransorm.localPosition = Vector3.zero;
         _pointerPosition = startPointerPos;
         _lastPathPosRecord = _hookTransorm.position;
-        StartCoroutine(HookDive());
+
+        _onDiveEnd = onDiveEnd;
+
+        _diveCoroutine = StartCoroutine(HookDiveCoroutine());
     }
 
-    private IEnumerator HookDive()
+    private IEnumerator HookDiveCoroutine()
     {
         while (_currentTravelDistance < _maxTravelDistance)
         {
@@ -64,21 +76,8 @@ public class FishingRode : MonoBehaviour
             DetectObstacle();
             yield return null;
         }
+        EndDive();
         // _lineRendere.enabled = false;
-        RecordPath(isLastPathPoint: true);
-
-        //TODO a bouger dans FishingSequence.cs
-        float rewindTime = 1;
-        while (rewindTime > 0)
-        {
-            Vector2 newPops = GetPositionOnPath(rewindTime);
-            // Debug.Log("Time : " + rewindTime + " / Pos : " + newPops);
-            transform.position = newPops;
-            rewindTime -= Time.deltaTime * 0.2f;
-            yield return null;
-        }
-
-        GameEvents.onDiveEnd.Invoke();
     }
 
     private void MoveHook()
@@ -89,6 +88,13 @@ public class FishingRode : MonoBehaviour
         _currentTravelDistance += Time.deltaTime * _movementSpeed;
     }
 
+    private void EndDive()
+    {
+        RecordPath(isLastPathPoint: true);
+        _onDiveEnd.Invoke();
+        _diveCoroutine = null;
+    }
+
     private void RecordPath(bool isLastPathPoint = false)
     {
         if (isLastPathPoint)
@@ -97,7 +103,8 @@ public class FishingRode : MonoBehaviour
                 _lastPathPosRecord,
                 _hookTransorm.position,
                 _linePathList[_linePathList.Count - 1].endTime,
-                1
+                1,
+                Vector2.Distance(_lastPathPosRecord, _hookTransorm.position)
             );
             _linePathList.Add(newPathPoint);
             return;
@@ -113,10 +120,10 @@ public class FishingRode : MonoBehaviour
                 _lastPathPosRecord,
                 _hookTransorm.position,
                 startTime,
-                endTime
+                endTime,
+                distance
             );
             _linePathList.Add(newPathPoint);
-
             _lastPathPosRecord = _hookTransorm.position;
         }
     }
@@ -127,6 +134,7 @@ public class FishingRode : MonoBehaviour
         if (cols.Length > 0)
         {
             _currentTravelDistance = _maxTravelDistance;
+            EndDive();
         }
     }
 
@@ -166,10 +174,4 @@ public class FishingRode : MonoBehaviour
             Gizmos.DrawLine(_linePathList[i].startPos, _linePathList[i].endPos);
         }
     }
-}
-
-
-public class FishingRodeVisual : MonoBehaviour
-{
-
 }
