@@ -40,17 +40,18 @@ public class FishingRode : MonoBehaviour
     [Header("Line Path : ")]
     [SerializeField, Range(0.01f, 1)] private float _pathResolution;
     [Header("Visual : ")]
-    [SerializeField] private LineRenderer _lineRendere;
+    [SerializeField] private TrailRenderer _trailRenderer;
+    [SerializeField] private LineRenderer _lineRenderer;
 
     private Vector3 _pointerPosition;
     private Vector2 _movementDir = Vector2.down;
-    private List<LinePathPoint> _linePathList = new List<LinePathPoint>();
+    [SerializeField, ReadOnly] private List<LinePathPoint> _linePathList = new List<LinePathPoint>();
     private Vector2 _lastPathPosRecord;
     private Coroutine _diveCoroutine = null;
 
     public Transform HookTransform => _hookTransorm;
     public float DistanceTravelTime => _currentTravelDistance / _maxTravelDistance;
-    public float MaxTravelDistance => _maxTravelDistance;
+    public float CurrentTravelDistance => _currentTravelDistance;
 
     private Action _onDiveEnd = null;
 
@@ -61,10 +62,25 @@ public class FishingRode : MonoBehaviour
         _hookTransorm.localPosition = Vector3.zero;
         _pointerPosition = startPointerPos;
         _lastPathPosRecord = _hookTransorm.position;
+        _currentTravelDistance = 0;
 
         _onDiveEnd = onDiveEnd;
 
         _diveCoroutine = StartCoroutine(HookDiveCoroutine());
+
+        _trailRenderer.enabled = true;
+        _lineRenderer.enabled = false;
+    }
+
+    public void ResetRode()
+    {
+        _currentTravelDistance = 0;
+        _hookTransorm.localPosition = Vector3.zero;
+        _lastPathPosRecord = _hookTransorm.position;
+
+        _linePathList.Clear();
+        _lineRenderer.positionCount = 0;
+        _trailRenderer.Clear();
     }
 
     private IEnumerator HookDiveCoroutine()
@@ -73,10 +89,13 @@ public class FishingRode : MonoBehaviour
         {
             MoveHook();
             RecordPath();
-            DetectObstacle();
+            if (DetectObstacle())
+                break;
+
             yield return null;
         }
-        EndDive();
+        EndHookDive();
+        _diveCoroutine = null;
         // _lineRendere.enabled = false;
     }
 
@@ -84,32 +103,33 @@ public class FishingRode : MonoBehaviour
     {
         Vector2 pointerDir = _pointerPosition - _hookTransorm.position;
         _movementDir = Vector2.Lerp(_movementDir, pointerDir, Time.deltaTime * _trackSpeed);
-        transform.Translate(_movementDir.normalized * _movementSpeed * Time.deltaTime, Space.World);
+        _hookTransorm.Translate(_movementDir.normalized * _movementSpeed * Time.deltaTime, Space.World);
         _currentTravelDistance += Time.deltaTime * _movementSpeed;
     }
 
-    private void EndDive()
+    private void EndHookDive()
     {
-        RecordPath(isLastPathPoint: true);
+        print("End rode Dive");
+        LinePathPoint lastPoint = new LinePathPoint(
+             _lastPathPosRecord,
+            _hookTransorm.position,
+            _linePathList[_linePathList.Count - 1].endTime,
+            _currentTravelDistance / _maxTravelDistance,
+            Vector2.Distance(_lastPathPosRecord, _hookTransorm.position)
+        );
+        _linePathList.Add(lastPoint);
+
+        _trailRenderer.enabled = false;
+        _lineRenderer.enabled = true;
+        UpdateLineRendere(_lineRenderer, _linePathList);
+        // _lineRenderer.positionCount++;
+        // _lineRenderer.SetPosition(_lineRenderer.positionCount - 1, lastPoint.endPos);
+
         _onDiveEnd.Invoke();
-        _diveCoroutine = null;
     }
 
-    private void RecordPath(bool isLastPathPoint = false)
+    private void RecordPath()
     {
-        if (isLastPathPoint)
-        {
-            LinePathPoint newPathPoint = new LinePathPoint(
-                _lastPathPosRecord,
-                _hookTransorm.position,
-                _linePathList[_linePathList.Count - 1].endTime,
-                1,
-                Vector2.Distance(_lastPathPosRecord, _hookTransorm.position)
-            );
-            _linePathList.Add(newPathPoint);
-            return;
-        }
-
         float distance = Vector2.Distance(_lastPathPosRecord, _hookTransorm.position);
         if (distance >= _pathResolution)
         {
@@ -128,30 +148,39 @@ public class FishingRode : MonoBehaviour
         }
     }
 
-    private void DetectObstacle()
+    private bool DetectObstacle()
     {
         Collider2D[] cols = Physics2D.OverlapCircleAll(_hookTransorm.position, _hookDetectionRadius, _hookDetectionLayer);
-        if (cols.Length > 0)
-        {
-            _currentTravelDistance = _maxTravelDistance;
-            EndDive();
-        }
+        print("Detecte Obstacle : " + (cols.Length > 0));
+        return cols.Length > 0;
     }
 
     public Vector2 GetPositionOnPath(float time)
     {
-        if (time >= 1) return _linePathList[_linePathList.Count - 1].endPos;
-        if (time <= 0) return _linePathList[0].startPos;
+        float relativeTime = Mathf.Lerp(0, _linePathList[_linePathList.Count - 1].endTime, time);
+        print("relativeTime = " + relativeTime);
+        if (relativeTime >= _linePathList[_linePathList.Count - 1].endTime) return _linePathList[_linePathList.Count - 1].endPos;
+        if (relativeTime <= 0) return _linePathList[0].startPos;
 
         for (int i = 0; i < _linePathList.Count; i++)
         {
-            if (time > _linePathList[i].startTime && time < _linePathList[i].endTime)
+            if (relativeTime > _linePathList[i].startTime && relativeTime < _linePathList[i].endTime)
             {
-                float pointTime = Mathf.InverseLerp(_linePathList[i].startTime, _linePathList[i].endTime, time);
+                float pointTime = Mathf.InverseLerp(_linePathList[i].startTime, _linePathList[i].endTime, relativeTime);
                 return Vector2.Lerp(_linePathList[i].startPos, _linePathList[i].endPos, pointTime);
             }
         }
         return Vector2.zero;
+    }
+
+    private void UpdateLineRendere(LineRenderer lineRenderer, List<LinePathPoint> path)
+    {
+        lineRenderer.positionCount = path.Count;
+        // lineRenderer.SetPosition(0, transform.position);
+        for (int i = 0; i < path.Count; i++)
+        {
+            lineRenderer.SetPosition(i, path[i].endPos);
+        }
     }
 
     public void OnMovePointer(InputValue value)
@@ -167,7 +196,7 @@ public class FishingRode : MonoBehaviour
 
         if (_linePathList.Count == 0 || _linePathList == null) return;
 
-        Gizmos.color = Color.red;
+        Gizmos.color = new Color(1, 0, 0, .5f);
         for (int i = 0; i < _linePathList.Count; i++)
         {
             Gizmos.DrawSphere(_linePathList[i].startPos, _pathResolution / 2);

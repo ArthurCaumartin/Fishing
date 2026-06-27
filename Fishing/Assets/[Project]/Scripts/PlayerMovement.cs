@@ -6,6 +6,7 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float _movementSpeed = 5;
     private Vector2 _velocity;
+    private Vector2 _currentVel;
 
     private void Start()
     {
@@ -24,7 +25,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        transform.Translate(_velocity * _movementSpeed * Time.deltaTime);
+        _currentVel = Vector2.Lerp(_currentVel, _velocity, Time.deltaTime * 3);
+        transform.Translate(_currentVel * _movementSpeed * Time.deltaTime);
     }
 
     public void OnMove(InputValue value)

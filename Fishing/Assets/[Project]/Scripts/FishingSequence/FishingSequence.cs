@@ -24,7 +24,7 @@ public class FishingSequence : MonoBehaviour
     {
         GameEvents.onDiveStart.Invoke();
 
-        _cameraControler?.SetTarget(_fishingRode.HookTransform);
+        _cameraControler?.SetTarget(_fishingRode.HookTransform, _cameraControler.DiveOffSet);
 
         bool isHookDiveEnd = false;
         _fishingRode.StartHookDive(transform.position, () => isHookDiveEnd = true);
@@ -37,15 +37,18 @@ public class FishingSequence : MonoBehaviour
         float rewindTime = 1;
         while (rewindTime > 0)
         {
+            print("Rewind : " + rewindTime);
             Vector2 newPops = _fishingRode.GetPositionOnPath(rewindTime);
             // Debug.Log("Time : " + rewindTime + " / Pos : " + newPops);
             _cameraTarget.position = newPops;
-            rewindTime -= Time.deltaTime * 5 / _fishingRode.MaxTravelDistance;
+            rewindTime -= Time.deltaTime * 5 / _fishingRode.CurrentTravelDistance;
             yield return null;
         }
 
+        _fishingRode.ResetRode();
         _cameraControler.SetOrtoSize();
         GameEvents.onDiveEnd.Invoke();
+        _diveCoroutine = null;
     }
 }
 
