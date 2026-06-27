@@ -9,11 +9,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2982148551359806000}
-  - component: {fileID: -6047186149835039218}
+  - component: {fileID: 8087617431286831441}
   - component: {fileID: 2280018835468059827}
-  - component: {fileID: 6796836923799164560}
+  - component: {fileID: 7516682667166648994}
   m_Layer: 10
-  m_Name: Level_Case
+  m_Name: GridCase
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -34,7 +34,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &-6047186149835039218
+--- !u!114 &8087617431286831441
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -43,10 +43,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 992970734649948912}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 932a0c5e303517a40a38cbea02999629, type: 3}
+  m_Script: {fileID: 11500000, guid: 04b094ed3567e954294850d81765dbd3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _spriteRenderer: {fileID: 2280018835468059827}
+  _spriteRenderer: {fileID: 0}
 --- !u!212 &2280018835468059827
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -99,7 +99,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!60 &6796836923799164560
+--- !u!60 &7516682667166648994
 PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -246,4 +246,4 @@ PolygonCollider2D:
       - {x: -0.089999996, y: -1.41}
       - {x: 0.17999999, y: -1.37}
       - {x: 0.29999998, y: -1.36}
-  m_UseDelaunayMesh: 0
+  m_UseDelaunayMesh: 1

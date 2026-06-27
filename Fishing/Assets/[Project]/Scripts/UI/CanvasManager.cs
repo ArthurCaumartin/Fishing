@@ -26,6 +26,7 @@ public class CanvasManager : MonoBehaviour
 
     private void Start()
     {
+        SetInteractionButton(null);
         GameEvents.onDiveStart +=  () => _buttonInteraction.gameObject.SetActive(false);
         GameEvents.onDiveEnd +=  () => _buttonInteraction.gameObject.SetActive(true);
     }
