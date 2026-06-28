@@ -4,6 +4,7 @@ using UnityEngine;
 public class CameraControler : MonoBehaviour
 {
     [SerializeField] private Transform _player;
+    [SerializeField] private GameEventListener _listenerDiveEnd;
     [Space]
     [SerializeField] private Transform _target;
     [SerializeField] private float _trackSpeed = 5;
@@ -25,7 +26,7 @@ public class CameraControler : MonoBehaviour
         _orthoSizeStart = _camera.orthographicSize;
         _orthoSizeTarget = _orthoSizeStart;
 
-        GameEvents.onDiveEnd += () => SetTarget(_player, PlayerOffSet);
+        _listenerDiveEnd.Sub(() => SetTarget(_player, PlayerOffSet));
     }
 
     private void Update()

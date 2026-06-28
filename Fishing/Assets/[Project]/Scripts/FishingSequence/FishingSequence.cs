@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class FishingSequence : MonoBehaviour
 {
+    [SerializeField] private GameEvent _eventDiveStart;
+    [SerializeField] private GameEvent _eventDiveEnd;
     [SerializeField] private FishingRode _fishingRode;
     [SerializeField] private Transform _cameraTarget;
     [Space]
@@ -22,7 +24,8 @@ public class FishingSequence : MonoBehaviour
 
     private IEnumerator DiveSequence()
     {
-        GameEvents.onDiveStart.Invoke();
+        _eventDiveStart.Raise();
+
 
         _cameraControler?.SetTarget(_fishingRode.HookTransform, _cameraControler.DiveOffSet);
 
@@ -32,12 +35,12 @@ public class FishingSequence : MonoBehaviour
 
         _cameraControler.SetOrtoSize(5);
         yield return new WaitForSeconds(1);
-        _cameraControler?.SetTarget(_cameraTarget);
+        // _cameraControler?.SetTarget(_cameraTarget); //TODO change "camera target" simplement avec le hook
 
         float rewindTime = 1;
         while (rewindTime > 0)
         {
-            print("Rewind : " + rewindTime);
+            // print("Rewind : " + rewindTime);
             Vector2 newPops = _fishingRode.GetPositionOnPath(rewindTime);
             // Debug.Log("Time : " + rewindTime + " / Pos : " + newPops);
             _cameraTarget.position = newPops;
@@ -47,7 +50,8 @@ public class FishingSequence : MonoBehaviour
 
         _fishingRode.ResetRode();
         _cameraControler.SetOrtoSize();
-        GameEvents.onDiveEnd.Invoke();
+
+        _eventDiveEnd.Raise();
         _diveCoroutine = null;
     }
 }

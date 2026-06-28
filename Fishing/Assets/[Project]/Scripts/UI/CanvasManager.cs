@@ -6,6 +6,8 @@ using UnityEngine.UI;
 public class CanvasManager : MonoBehaviour
 {
     public static CanvasManager Instance;
+    [SerializeField] private GameEventListener _listenerDiveStart;
+    [SerializeField] private GameEventListener _listenerDiveEnd;
     [SerializeField] private PanelInput _panelInputLeft;
     [SerializeField] private PanelInput _panelInputRight;
     [Space]
@@ -27,8 +29,9 @@ public class CanvasManager : MonoBehaviour
     private void Start()
     {
         SetInteractionButton(null);
-        GameEvents.onDiveStart +=  () => _buttonInteraction.gameObject.SetActive(false);
-        GameEvents.onDiveEnd +=  () => _buttonInteraction.gameObject.SetActive(true);
+
+        _listenerDiveStart.Sub(() => _buttonInteraction.gameObject.SetActive(false));
+        _listenerDiveEnd.Sub(() => _buttonInteraction.gameObject.SetActive(true));
     }
 
     public void SetInteractionButton(Interactible interactible)

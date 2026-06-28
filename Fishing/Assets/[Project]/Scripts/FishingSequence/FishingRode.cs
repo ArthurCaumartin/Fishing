@@ -151,14 +151,14 @@ public class FishingRode : MonoBehaviour
     private bool DetectObstacle()
     {
         Collider2D[] cols = Physics2D.OverlapCircleAll(_hookTransorm.position, _hookDetectionRadius, _hookDetectionLayer);
-        print("Detecte Obstacle : " + (cols.Length > 0));
+        // print("Detecte Obstacle : " + (cols.Length > 0));
         return cols.Length > 0;
     }
 
     public Vector2 GetPositionOnPath(float time)
     {
         float relativeTime = Mathf.Lerp(0, _linePathList[_linePathList.Count - 1].endTime, time);
-        print("relativeTime = " + relativeTime);
+        // print("relativeTime = " + relativeTime);
         if (relativeTime >= _linePathList[_linePathList.Count - 1].endTime) return _linePathList[_linePathList.Count - 1].endPos;
         if (relativeTime <= 0) return _linePathList[0].startPos;
 
