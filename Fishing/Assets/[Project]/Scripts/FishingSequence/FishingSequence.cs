@@ -1,12 +1,19 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
+
+// TODO ajouter des "Sequencable" ? pour gerer l'enchainement ?
 
 public class FishingSequence : MonoBehaviour
 {
+    [SerializeField] private Transform _cameraTarget;
+    [SerializeField] private FishingRode _fishingRode;
+    [SerializeField] private FishGenerator _fishGenerator;
+    [Space]
     [SerializeField] private GameEvent _eventDiveStart;
     [SerializeField] private GameEvent _eventDiveEnd;
-    [SerializeField] private FishingRode _fishingRode;
-    [SerializeField] private Transform _cameraTarget;
     [Space]
     private CameraControler _cameraControler;
     private Coroutine _diveCoroutine = null;
@@ -26,24 +33,30 @@ public class FishingSequence : MonoBehaviour
     {
         _eventDiveStart.Raise();
 
-
-        _cameraControler?.SetTarget(_fishingRode.HookTransform, _cameraControler.DiveOffSet);
+        _cameraControler.SetTarget(_fishingRode.HookTransform, _cameraControler.DiveOffSet);
 
         bool isHookDiveEnd = false;
         _fishingRode.StartHookDive(transform.position, () => isHookDiveEnd = true);
         while (!isHookDiveEnd) yield return null;
 
-        _cameraControler.SetOrtoSize(5);
+        _cameraControler.SetOrtoSize(2.5f);
+        _cameraControler.SetTarget(_fishingRode.HookTransform);
         yield return new WaitForSeconds(1);
-        // _cameraControler?.SetTarget(_cameraTarget); //TODO change "camera target" simplement avec le hook
+
+        Fish newFish =  _fishGenerator.GenerateNewFish(_fishingRode.HookTransform.position, 10);  
+        newFish.Hook(_fishingRode);
+
+        yield return new WaitForSeconds(1);
+
 
         float rewindTime = 1;
         while (rewindTime > 0)
         {
             // print("Rewind : " + rewindTime);
-            Vector2 newPops = _fishingRode.GetPositionOnPath(rewindTime);
+            Vector2 newPos = _fishingRode.GetPositionOnPath(rewindTime);
+            _fishingRode.SetHookPosition(newPos);
             // Debug.Log("Time : " + rewindTime + " / Pos : " + newPops);
-            _cameraTarget.position = newPops;
+            _cameraTarget.position = newPos;
             rewindTime -= Time.deltaTime * 5 / _fishingRode.CurrentTravelDistance;
             yield return null;
         }
@@ -55,5 +68,3 @@ public class FishingSequence : MonoBehaviour
         _diveCoroutine = null;
     }
 }
-
-

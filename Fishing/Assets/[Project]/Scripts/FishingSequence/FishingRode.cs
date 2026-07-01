@@ -101,7 +101,7 @@ public class FishingRode : MonoBehaviour
 
     private void MoveHook()
     {
-        Vector2 pointerDir = _pointerPosition - _hookTransorm.position;
+        Vector2 pointerDir = (_pointerPosition - _hookTransorm.position).normalized;
         _movementDir = Vector2.Lerp(_movementDir, pointerDir, Time.deltaTime * _trackSpeed);
         _hookTransorm.Translate(_movementDir.normalized * _movementSpeed * Time.deltaTime, Space.World);
         _currentTravelDistance += Time.deltaTime * _movementSpeed;
@@ -153,6 +153,12 @@ public class FishingRode : MonoBehaviour
         Collider2D[] cols = Physics2D.OverlapCircleAll(_hookTransorm.position, _hookDetectionRadius, _hookDetectionLayer);
         // print("Detecte Obstacle : " + (cols.Length > 0));
         return cols.Length > 0;
+        // return false;
+    }
+
+    public void SetHookPosition(Vector3 position)
+    {
+        _hookTransorm.position = position;
     }
 
     public Vector2 GetPositionOnPath(float time)
@@ -186,7 +192,11 @@ public class FishingRode : MonoBehaviour
     public void OnMovePointer(InputValue value)
     {
         Vector3 screenPos = value.Get<Vector2>();
-        _pointerPosition = Camera.main.ScreenToWorldPoint(screenPos);
+        if (Camera.main.orthographic)
+            _pointerPosition = Camera.main.ScreenToWorldPoint(screenPos);
+        else
+            _pointerPosition = Camera.main.TransposePixelPositionInFrustrum(10, screenPos);
+        // print("Set Popinter pos : " + Camera.main.ScreenToWorldPoint(screenPos));
     }
 
     private void OnDrawGizmos()

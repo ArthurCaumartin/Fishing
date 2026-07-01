@@ -19,6 +19,7 @@ public class CameraControler : MonoBehaviour
     public Vector2 PlayerOffSet => _playerOffSet;
     public Vector2 DiveOffSet => _diveOffSet;
 
+    //TODO le pointer pendant le dive est plus pris en compte :()
 
     private void Start()
     {
@@ -26,12 +27,17 @@ public class CameraControler : MonoBehaviour
         _orthoSizeStart = _camera.orthographicSize;
         _orthoSizeTarget = _orthoSizeStart;
 
-        _listenerDiveEnd.Sub(() => SetTarget(_player, PlayerOffSet));
+
+        if (_player)
+        {
+            SetTarget(_player, _playerOffSet);
+            _listenerDiveEnd.Sub(() => SetTarget(_player, PlayerOffSet));
+        }
     }
 
     private void Update()
     {
-        if(!_target || !_camera) return;
+        if (!_target || !_camera) return;
         _camera.orthographicSize = Mathf.Lerp(_camera.orthographicSize, _orthoSizeTarget, Time.deltaTime * 10);
 
         Vector3 targetPos = _target.position + (Vector3)_offSet;
@@ -41,11 +47,12 @@ public class CameraControler : MonoBehaviour
             targetPos,
             Time.deltaTime * _trackSpeed
         );
+
     }
 
     public void SetTarget(Transform target, Vector2 offSet = new Vector2())
     {
-        print("Cam Target set to : " + target.name);
+        // print("Cam Target set to : " + target.name);
         _target = target;
         _offSet = offSet;
     }
@@ -57,10 +64,10 @@ public class CameraControler : MonoBehaviour
 
     public void SetOrtoSize(float size = 0)
     {
-        if(size != 0)
+        if (size != 0)
         {
             _orthoSizeTarget = size;
-            return;   
+            return;
         }
         _orthoSizeTarget = _orthoSizeStart;
     }
